@@ -1,0 +1,190 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class Friendbook {
+
+	private static Connection connection = null;
+	private static Statement stmt = null;
+	private static ResultSet rs = null;
+	private static PreparedStatement statement = null;
+	private static BufferedReader reader = null;
+	private static String id = null;
+	private static String contact = null;
+	private static String address = null;
+	private static String email = null;
+	private static String account_name = null;
+
+	public static void initializeParameters() {
+		id = null;
+		contact = null;
+		address = null;
+		email = null;
+		account_name = null;
+	}
+
+	/**
+	 *
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		try {
+			/*
+			 * BufferedReader object initialized to take input from the user
+			 */
+			reader = new BufferedReader(new InputStreamReader(System.in));
+			establishConnection();
+			int selection;
+			boolean flag = false;
+			while (true) {
+				initializeParameters();
+				System.out.println(
+						"Enter your choice:\n 1-Create User Account. 2-Enter Contact to your Contact List. 3-See your contact list. 4-Delete Contact. 5-Exit");
+				selection = Integer.parseInt(reader.readLine().trim());
+				switch (selection) {
+				case 1:
+					createAccount();
+					break;
+				case 2:
+					addContact();
+					break;
+				case 3:
+					dispayContact();
+					break;
+				case 4:
+					deleteContact();
+					break;
+				case 5:
+					flag = true;
+					break;
+				}
+				if (flag == true) {
+					break;
+				}
+			}
+		} catch (IOException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException ex) {
+				Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+	}
+
+	/**
+	 * This method establishes a new connection with the database
+	 */
+	public static void establishConnection() {
+		try {
+			// Establish the connection.
+			String connectionUrl = "jdbc:sqlserver://localhost:1433;databaseName=FriendBook;integratedSecurity=true";
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			if (connection == null) {
+				connection = DriverManager.getConnection(connectionUrl);
+			}
+		} catch (ClassNotFoundException | SQLException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	/**
+	 * This method adds a new contact to the contact list
+	 */
+	public static void deleteContact() {
+		try {
+			System.out.println("Enter your user id: ");
+			id = reader.readLine();
+			System.out.println("Enter the name of your contact to be deleted: ");
+			account_name = reader.readLine();
+			statement = connection.prepareStatement(
+					"DELETE FROM CONTACTS__LIST WHERE ACCOUNT_HOLDER_ID = ? AND CONTACT_NAME = ?");
+			statement.setString(1, id);
+			statement.setString(2, account_name);
+			statement.executeUpdate();
+			System.out.println("Contact Deleted");
+		} catch (IOException | SQLException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	/**
+	 * This method adds a new contact to the contact list
+	 */
+	public static void addContact() {
+		try {
+			System.out.println("Enter your user id: ");
+			id = reader.readLine();
+			System.out.println("Enter the name of your contact: ");
+			account_name = reader.readLine();
+			System.out.println("Enter the number of your contact: ");
+			contact = reader.readLine();
+			statement = connection.prepareStatement("INSERT INTO CONTACTS__LIST VALUES (?,?,?)");
+			statement.setString(1, account_name);
+			statement.setString(2, contact);
+			statement.setString(3, id);
+			statement.executeUpdate();
+			System.out.println("Contact Added");
+		} catch (IOException | SQLException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	/**
+	 * This method creates a new account for the user
+	 */
+	public static void createAccount() {
+		try {
+			System.out.println("Enter user id:");
+			id = reader.readLine();
+			System.out.println("Enter name:");
+			account_name = reader.readLine();
+			System.out.println("Enter address");
+			address = reader.readLine();
+			System.out.println("Enter email address");
+			email = reader.readLine();
+			System.out.println("Enter Phone number");
+			contact = reader.readLine();
+			statement = connection.prepareStatement("INSERT INTO USER_ACCOUNT VALUES (?,?,?,?,?)");
+			statement.setString(1, id);
+			statement.setString(2, account_name);
+			statement.setString(3, address);
+			statement.setString(4, email);
+			statement.setString(5, contact);
+			statement.executeUpdate();
+			System.out.println("Data inserted");
+		} catch (SQLException | IOException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	/**
+	 * This method displays the existing contacts in the contact list
+	 */
+	public static void dispayContact() {
+		try {
+			System.out.println("Enter your userid");
+			id = reader.readLine();
+			System.out.println("Your Contact List:");
+			String query = "SELECT CL.CONTACT_NAME,CL.CONTACT_NUMBER FROM CONTACTS__LIST CL JOIN USER_ACCOUNT UA ON UA.ID = CL.ACCOUNT_HOLDER_ID WHERE CL.ACCOUNT_HOLDER_ID ='"
+					+ id + "'";
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				System.out.println(rs.getString(1) + " " + rs.getString(2));
+			}
+		} catch (SQLException | IOException ex) {
+			Logger.getLogger(Friendbook.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+}
+
