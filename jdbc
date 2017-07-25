@@ -1,0 +1,28 @@
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class JDBCCONNECTIVITY{
+		public static void main(String args[]) throws SQLException, IOException, ClassNotFoundException
+		{
+		try{
+			Class.forName("oracle.jdbc.driver.OracleDriver");
+			Connection conn = DriverManager.getConnection("jdbc:oracle:thin:@:1521:XE","ISSAC","zuckerberg");
+			Statement sql_stmt = conn.createStatement();
+			ResultSet rs = sql_stmt.executeQuery("SELECT DNAME, DNUMBER FROM DEPARTMENT");
+	  while(rs.next())
+	{		String NAME = rs.getString("DNAME");
+            int NUMBER = rs.getInt("DNUMBER");
+            System.out.println(NAME + "\t" + NUMBER);// + "\t" + DATE);
+	}
+	  rs.close();
+	  sql_stmt.close();
+	  conn.close();
+}
+catch (SQLException e) {
+System.out.println("Hello");}
+	}
+	}
